@@ -5,7 +5,6 @@ namespace Rockero\EnumStateMachine;
 use BackedEnum;
 use Exception;
 use Illuminate\Contracts\Database\Eloquent\Castable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use ReflectionClass;
@@ -21,9 +20,7 @@ abstract class StateMachine implements Castable
         protected string $attribute,
         BackedEnum|string $state,
     ) {
-        if (is_string($state)) {
-            $this->state = static::$stateClass::from($state);
-        }
+        $this->state = is_string($state) ? static::$stateClass::from($state) : $state;
     }
 
     public static function castUsing(array $arguments)
