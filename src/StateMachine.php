@@ -4,28 +4,52 @@ namespace Rockero\EnumStateMachine;
 
 use BackedEnum;
 use Exception;
+use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use ReflectionClass;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
-abstract class StateMachine
+abstract class StateMachine implements Castable
 {
+    protected static string $stateClass;
+    protected BackedEnum $state;
+
     public function __construct(
         protected Model $model,
         protected string $attribute,
-        protected BackedEnum $state,
+        BackedEnum|string $state,
     ) {
+        if (is_string($state)) {
+            $this->state = static::$stateClass::from($state);
+        }
     }
 
-    public static function attribute(Model $model, string $attribute = 'state'): Attribute
+    public static function castUsing(array $arguments)
     {
-        return Attribute::make(fn ($state) => new static($model, $attribute, self::castEnum($state)))->withoutObjectCaching();
-    }
+        return new class(static::class) implements CastsAttributes
+        {
+            public function __construct(
+                public string $class,
+            ) {
+            }
 
-    private static function castEnum(BackedEnum|string $enum): BackedEnum
-    {
-        return $enum instanceof BackedEnum ? $enum : static::$stateClass::from($enum);
+            public function get($model, $key, $value, $attributes)
+            {
+                return new $this->class($model, $key, $value);
+            }
+ 
+            public function set($model, $key, $value, $attributes)
+            {
+                return [$key => $value->value];
+            }
+
+            public function serialize($model, $key, $value, $attributes)
+            {
+                return $value->value;
+            }
+        };
     }
 
     /**
