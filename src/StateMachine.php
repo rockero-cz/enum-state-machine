@@ -93,7 +93,7 @@ abstract class StateMachine implements Castable
     protected function handleTransition(BackedEnum $newState): void
     {
         if ($handler = $this->findTransition($newState)->transitionClass) {
-            (new $handler)($this->model);
+            (new $handler($this->model))->__invoke();
 
             return;
         }
