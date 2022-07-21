@@ -36,7 +36,7 @@ abstract class StateMachine implements Castable
             {
                 return new $this->class($model, $key, $value);
             }
- 
+
             public function set($model, $key, $value, $attributes)
             {
                 return [$key => $value->value];
@@ -54,6 +54,11 @@ abstract class StateMachine implements Castable
      */
     public function transitionTo(BackedEnum $newState): void
     {
+
+        if ($this->state === $newState) {
+            return;
+        }
+
         if (!$this->isTransitionAllowed($newState)) {
             throw new Exception('Cannot transition to state ' . $newState->name);
         }
